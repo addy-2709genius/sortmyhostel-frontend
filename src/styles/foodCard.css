@@ -1,0 +1,395 @@
+.food-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  border: 1px solid var(--border-card);
+  border-top: 3px solid rgba(30, 58, 138, 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;
+  animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+.food-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  background: linear-gradient(90deg, rgba(30, 58, 138, 0.2) 0%, rgba(30, 58, 138, 0.15) 50%, rgba(30, 58, 138, 0.2) 100%);
+  border-radius: 0;
+}
+
+.food-card:hover {
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.07),
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(30, 58, 138, 0.1);
+  border-color: rgba(30, 58, 138, 0.2);
+  transform: translateY(-2px);
+}
+
+.food-card-title {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-heading);
+  margin-bottom: 0.875rem;
+  letter-spacing: -0.01em;
+  line-height: var(--line-height-tight);
+}
+
+.food-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.food-card-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  position: relative;
+  min-height: 44px; /* Touch-friendly minimum height */
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+.food-card-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.food-card-button:active:not(:disabled)::after {
+  width: 300px;
+  height: 300px;
+}
+
+.food-card-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+@media (max-width: 640px) {
+  .food-card {
+    padding: 0.875rem;
+  }
+
+  .food-card-title {
+    font-size: 0.9375rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .food-card-button {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    min-height: 48px; /* Larger touch target on mobile */
+  }
+
+  .food-card-actions {
+    gap: 0.625rem;
+  }
+}
+
+.food-card-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.food-card-button:disabled,
+.food-card-button.disabled {
+  opacity: 1;
+  cursor: not-allowed;
+  pointer-events: none;
+  position: relative;
+}
+
+/* Disabled Like Button - Better contrast for accessibility */
+.like-button:disabled,
+.like-button.disabled {
+  background-color: var(--like-disabled-bg) !important;
+  color: var(--like-disabled-text) !important;
+  border: 1px solid var(--like-disabled-border) !important;
+  opacity: 1;
+}
+
+.like-button:disabled .count-badge,
+.like-button.disabled .count-badge {
+  background-color: rgba(27, 94, 32, 0.2) !important;
+  color: var(--like-disabled-text) !important;
+}
+
+/* Disabled Dislike Button - Better contrast for accessibility */
+.dislike-button:disabled,
+.dislike-button.disabled {
+  background-color: var(--dislike-disabled-bg) !important;
+  color: var(--dislike-disabled-text) !important;
+  border: 1px solid var(--dislike-disabled-border) !important;
+  opacity: 1;
+}
+
+.dislike-button:disabled .count-badge,
+.dislike-button.disabled .count-badge {
+  background-color: rgba(183, 28, 28, 0.2) !important;
+  color: var(--dislike-disabled-text) !important;
+}
+
+.food-card-disabled {
+  opacity: 0.85;
+  position: relative;
+}
+
+.view-only-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  background-color: var(--gray-200);
+  color: var(--gray-600);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.feedback-disabled-message {
+  background-color: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.feedback-disabled-message p {
+  color: var(--gray-600);
+  font-size: 0.875rem;
+  margin: 0;
+  text-align: center;
+  font-style: italic;
+}
+
+.comment-button.disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  background-color: var(--gray-100) !important;
+  color: var(--gray-600) !important;
+  border-color: var(--gray-300) !important;
+  font-weight: 500;
+}
+
+.like-button {
+  background-color: var(--like-bg);
+  color: var(--like-text);
+  border-color: transparent;
+}
+
+.like-button:hover:not(:disabled) {
+  background-color: #BBF7D0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+}
+
+.like-button.active {
+  background-color: var(--like-active);
+  color: var(--white);
+  border-color: var(--like-active);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
+}
+
+.dislike-button {
+  background-color: var(--dislike-bg);
+  color: var(--dislike-text);
+  border-color: transparent;
+}
+
+.dislike-button:hover:not(:disabled) {
+  background-color: #FECACA;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.dislike-button.active {
+  background-color: var(--dislike-active);
+  color: var(--white);
+  border-color: var(--dislike-active);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
+.count-badge {
+  background-color: rgba(255, 255, 255, 0.25);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.comment-button {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background-color: var(--bg-card);
+  color: var(--text-body);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1.5px solid var(--border-card);
+  cursor: pointer;
+  font-size: 0.875rem;
+  min-height: 44px;
+}
+
+.comment-button:hover {
+  background-color: var(--gray-50);
+  border-color: var(--divider);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.comment-form {
+  margin-top: 1rem;
+}
+
+.comment-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  resize: none;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--bg-card);
+  color: var(--text-body);
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .comment-textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.875rem 1rem;
+    min-height: 100px;
+  }
+
+  .comment-submit-button {
+    min-height: 48px; /* Touch-friendly */
+    padding: 0.875rem 1.25rem;
+    font-size: 1rem;
+  }
+
+  .comment-form-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .comment-length-hint {
+    text-align: center;
+  }
+}
+
+.comment-textarea:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+  outline: none;
+}
+
+.comment-form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.comment-length-hint {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.comment-submit-button {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--navy);
+  color: var(--white);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  position: relative;
+  overflow: hidden;
+  min-height: 44px;
+}
+
+.comment-submit-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.comment-submit-button:hover:not(:disabled)::before {
+  width: 300px;
+  height: 300px;
+}
+
+.comment-submit-button:hover:not(:disabled) {
+  background-color: var(--navy-dark);
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25), 0 2px 4px rgba(30, 58, 138, 0.15);
+  transform: translateY(-2px);
+}
+
+.comment-submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (min-width: 640px) {
+  .food-card-actions {
+    flex-direction: row;
+  }
+
+  .food-card {
+    padding: 1.125rem 1rem;
+  }
+
+  .food-card-title {
+    font-size: 1.0625rem;
+  }
+}
+

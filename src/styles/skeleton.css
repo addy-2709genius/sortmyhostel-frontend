@@ -1,0 +1,91 @@
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0;
+}
+
+.food-card-skeleton {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 0;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeleton-title {
+  height: 1.5rem;
+  width: 60%;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-button {
+  height: 2.75rem;
+  width: 100%;
+}
+
+.comment-card-skeleton {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  border-radius: 0;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeleton-header {
+  height: 1.25rem;
+  width: 70%;
+}
+
+.skeleton-text {
+  height: 1rem;
+  width: 100%;
+}
+
+.skeleton-text.short {
+  width: 60%;
+}
+
+.skeleton-footer {
+  height: 0.875rem;
+  width: 40%;
+  margin-top: 0.5rem;
+}
+
+.menu-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.skeleton-day-tabs {
+  height: 4rem;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .skeleton-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .skeleton-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+
+
+
