@@ -139,21 +139,8 @@ const AdminDashboard = () => {
     setUploadMessage({ type: '', text: '' });
 
     try {
-      // Send file to backend API
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://sortmyhostel-backend.onrender.com'}/api/menu/upload-excel`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload menu');
-      }
-      
-      const result = await response.json();
+      // Use API service which handles authentication
+      const result = await updateMenuFromExcel(file);
       
       setUploadMessage({
         type: 'success',
