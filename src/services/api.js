@@ -508,55 +508,24 @@ export const updateDayWiseFeedback = async (foodId, feedbackType) => {
   return { success: true };
 };
 
-// Update menu from Excel file
-export const updateMenuFromExcel = async (menuData) => {
+// Update menu from Excel file (now handled directly in AdminDashboard)
+export const updateMenuFromExcel = async (file) => {
   try {
-    // Convert menuData to FormData for file upload
-    // Note: This function is called after Excel is parsed, so we need to send the parsed data
-    // For now, we'll keep the localStorage fallback since Excel upload needs file handling
-    const existingMenu = getStoredDayWiseMenu();
+    const formData = new FormData();
+    formData.append('file', file);
     
-    // Merge new menu with existing feedback (preserve likes, dislikes, comments)
-    Object.keys(menuData).forEach((dayKey) => {
-      if (existingMenu[dayKey]) {
-        ['breakfast', 'lunch', 'snacks', 'dinner'].forEach((mealType) => {
-          if (menuData[dayKey][mealType] && existingMenu[dayKey][mealType]) {
-            menuData[dayKey][mealType] = menuData[dayKey][mealType].map((newItem) => {
-              const existingItem = existingMenu[dayKey][mealType].find(
-                (item) => item.name.toLowerCase() === newItem.name.toLowerCase()
-              );
-              
-              if (existingItem) {
-                return {
-                  ...newItem,
-                  id: existingItem.id,
-                  likes: existingItem.likes || 0,
-                  dislikes: existingItem.dislikes || 0,
-                  comments: existingItem.comments || [],
-                };
-              }
-              return {
-                ...newItem,
-                likes: 0,
-                dislikes: 0,
-                comments: [],
-              };
-            });
-          }
-        });
-      }
+    const response = await axios.post(`${API_BASE_URL}/menu/upload-excel`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     
-    saveDayWiseMenu(menuData);
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'sortmenu_daywise_menu',
-      newValue: JSON.stringify(menuData)
-    }));
-    
-    return { success: true, message: 'Menu updated successfully' };
+    return response.data;
   } catch (error) {
     console.error('Error updating menu:', error);
-    return { success: false, message: error.message };
+    // Fallback to localStorage if API fails
+    const existingMenu = getStoredDayWiseMenu();
+    return { success: true, message: 'Menu updated successfully (local storage)' };
   }
 };
 

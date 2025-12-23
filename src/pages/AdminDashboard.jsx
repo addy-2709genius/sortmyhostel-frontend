@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { getAnalytics, getWastageData, submitWastage, updateMenuFromExcel, getDislikedFoodIssues, deleteComment, addManualMenuItem } from '../services/api';
-import { parseExcelMenu } from '../utils/excelParser';
+import { getAnalytics, getWastageData, submitWastage, getDislikedFoodIssues, deleteComment, addManualMenuItem } from '../services/api';
 import '../styles/adminDashboard.css';
 
 const AdminDashboard = () => {
@@ -140,15 +139,25 @@ const AdminDashboard = () => {
     setUploadMessage({ type: '', text: '' });
 
     try {
-      // Parse the Excel file
-      const menuData = await parseExcelMenu(file);
+      // Send file to backend API
+      const formData = new FormData();
+      formData.append('file', file);
       
-      // Update menu in storage
-      await updateMenuFromExcel(menuData);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://sortmyhostel-backend.onrender.com'}/api/menu/upload-excel`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload menu');
+      }
+      
+      const result = await response.json();
       
       setUploadMessage({
         type: 'success',
-        text: 'Menu uploaded successfully! The menu has been updated. Student view will refresh automatically.',
+        text: result.message || 'Menu uploaded successfully! The menu has been updated. Student view will refresh automatically.',
       });
       
       // Show toast notification

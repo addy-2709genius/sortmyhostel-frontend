@@ -254,6 +254,31 @@ const FoodCard = ({ food, onUpdate, isCurrentDay = false }) => {
           </div>
         </form>
       )}
+
+      {/* Display existing comments */}
+      {food.comments && food.comments.length > 0 && (
+        <div className="comments-section">
+          <h4 className="comments-title">Comments ({food.comments.length})</h4>
+          <div className="comments-list">
+            {food.comments.map((comment) => (
+              <div key={comment.id || comment.timestamp} className="comment-item">
+                <p className="comment-text">{comment.text}</p>
+                <span className="comment-timestamp">
+                  {comment.timestamp 
+                    ? new Date(comment.timestamp).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : 'Recently'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

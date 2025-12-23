@@ -379,6 +379,46 @@
   cursor: not-allowed;
 }
 
+/* Comments Display Section */
+.comments-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-card);
+}
+
+.comments-title {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-heading);
+  margin-bottom: 0.75rem;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.comment-item {
+  background-color: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  border: 1px solid var(--border-card);
+}
+
+.comment-text {
+  font-size: 0.875rem;
+  color: var(--text-body);
+  line-height: var(--line-height-normal);
+  margin: 0 0 0.5rem 0;
+}
+
+.comment-timestamp {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: var(--font-weight-normal);
+}
+
 @media (min-width: 640px) {
   .food-card-actions {
     flex-direction: row;
