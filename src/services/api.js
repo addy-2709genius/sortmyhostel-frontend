@@ -84,12 +84,18 @@ export const getDayWiseMenu = async (day) => {
 
 export const updateMenuFromExcel = async (file) => {
   try {
+    const adminToken = sessionStorage.getItem('admin_auth');
+    if (!adminToken) {
+      throw new Error('Admin authentication required');
+    }
+    
     const formData = new FormData();
     formData.append('file', file);
     
     const response = await axios.post(`${API_BASE_URL}/menu/upload-excel`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${adminToken}`,
       },
     });
     
@@ -102,10 +108,19 @@ export const updateMenuFromExcel = async (file) => {
 
 export const addManualMenuItem = async (day, meal, foodName) => {
   try {
+    const adminToken = sessionStorage.getItem('admin_auth');
+    if (!adminToken) {
+      throw new Error('Admin authentication required');
+    }
+    
     const response = await axios.post(`${API_BASE_URL}/menu/add-item`, {
       day,
       meal,
       foodName,
+    }, {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+      },
     });
     return response.data;
   } catch (error) {
@@ -155,7 +170,16 @@ export const submitComment = async (foodId, comment) => {
 
 export const deleteComment = async (foodId, commentId) => {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/feedback/comment/${commentId}`);
+    const adminToken = sessionStorage.getItem('admin_auth');
+    if (!adminToken) {
+      throw new Error('Admin authentication required');
+    }
+    
+    const response = await axios.delete(`${API_BASE_URL}/feedback/comment/${commentId}`, {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error deleting comment:', error);
@@ -217,9 +241,18 @@ export const getYesterdayWastage = async () => {
 
 export const submitWastage = async (cooked, wasted) => {
   try {
+    const adminToken = sessionStorage.getItem('admin_auth');
+    if (!adminToken) {
+      throw new Error('Admin authentication required');
+    }
+    
     const response = await axios.post(`${API_BASE_URL}/wastage/submit`, {
       cooked,
       wasted,
+    }, {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+      },
     });
     return response.data;
   } catch (error) {
