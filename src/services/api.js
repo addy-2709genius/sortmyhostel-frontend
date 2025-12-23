@@ -2,7 +2,10 @@ import axios from 'axios';
 import { getAnonymousUserId } from '../utils/storage.js';
 
 // Base URL for API - Use localhost for local development, Render URL for production
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000/api' : 'https://sortmyhostel-backend.onrender.com/api');
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.MODE === 'development' || window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api' 
+    : 'https://sortmyhostel-backend.onrender.com/api');
 
 // Production-ready API service - no dummy data fallbacks
 
@@ -17,9 +20,11 @@ export const studentSignup = async (email, password, name) => {
     return response.data;
   } catch (error) {
     console.error('Error signing up:', error);
+    console.error('API URL:', API_BASE_URL);
+    console.error('Error details:', error.response?.data || error.message);
     return {
       success: false,
-      error: error.response?.data?.error || 'Signup failed. Please try again.',
+      error: error.response?.data?.error || error.message || 'Signup failed. Please try again.',
     };
   }
 };

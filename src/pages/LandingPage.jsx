@@ -73,13 +73,13 @@ const LandingPage = () => {
           formData.name
         );
 
-        if (response.success) {
+        if (response && response.success) {
           localStorage.setItem('student_token', response.data.token);
           localStorage.setItem('student_name', response.data.student.name);
           localStorage.setItem('student_email', response.data.student.email);
           navigate('/home');
         } else {
-          setError(response.error || 'Signup failed');
+          setError(response?.error || 'Signup failed. Please try again.');
         }
       }
     } catch (err) {
