@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { getAnalytics, getWastageData, submitWastage, getDislikedFoodIssues, deleteComment, addManualMenuItem } from '../services/api';
+import { getAnalytics, getWastageData, submitWastage, getDislikedFoodIssues, deleteComment, addManualMenuItem, updateMenuFromExcel } from '../services/api';
 import '../styles/adminDashboard.css';
 
 const AdminDashboard = () => {
