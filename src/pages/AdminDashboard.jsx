@@ -192,14 +192,35 @@ const AdminDashboard = () => {
       window.dispatchEvent(new Event('menuUpdated'));
     } catch (error) {
       console.error('Error uploading menu:', error);
+      
+      // Extract detailed error message
+      let errorMessage = error.message || 'Failed to upload menu';
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+        if (errorData.warnings && errorData.warnings.length > 0) {
+          errorMessage += `\n\n⚠️ Warnings:\n${errorData.warnings.map(w => `• ${w}`).join('\n')}`;
+        }
+        if (errorData.stats) {
+          errorMessage += `\n\n📊 Stats:\n• Days found: ${errorData.stats.daysFound || 0}/7\n• Total items: ${errorData.stats.totalItems || 0}`;
+        }
+      }
+      
       setUploadMessage({
         type: 'error',
-        text: `Failed to upload menu: ${error.message}`,
+        text: `Failed to upload menu: ${errorMessage}`,
       });
       
       // Show error toast
       window.dispatchEvent(new CustomEvent('showToast', {
-        detail: { message: `Failed to upload menu: ${error.message}`, type: 'error', duration: 4000, id: Date.now() }
+        detail: { 
+          message: error.response?.data?.error || error.message || 'Failed to upload menu. Please check the file format.', 
+          type: 'error', 
+          duration: 6000, 
+          id: Date.now() 
+        }
       }));
     } finally {
       setUploading(false);
