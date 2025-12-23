@@ -142,15 +142,41 @@ const AdminDashboard = () => {
       // Use API service which handles authentication
       const result = await updateMenuFromExcel(file);
       
-      setUploadMessage({
-        type: 'success',
-        text: result.message || 'Menu uploaded successfully! The menu has been updated. Student view will refresh automatically.',
-      });
-      
-      // Show toast notification
-      window.dispatchEvent(new CustomEvent('showToast', {
-        detail: { message: 'Menu uploaded successfully!', type: 'success', duration: 3000, id: Date.now() }
-      }));
+      if (result.success) {
+        // Build message with warnings if any
+        let message = result.message || 'Menu uploaded successfully! The menu has been updated. Student view will refresh automatically.';
+        
+        if (result.warnings && result.warnings.length > 0) {
+          message += `\n\n⚠️ Warnings:\n${result.warnings.map(w => `• ${w}`).join('\n')}`;
+        }
+        
+        if (result.stats) {
+          message += `\n\n📊 Upload Summary:\n• Days found: ${result.stats.daysFound}/7\n• Total items: ${result.stats.totalItems}`;
+          if (result.stats.daysMissing > 0) {
+            message += `\n• Missing days: ${result.stats.daysMissing}`;
+          }
+        }
+        
+        setUploadMessage({
+          type: result.warnings && result.warnings.length > 0 ? 'warning' : 'success',
+          text: message,
+        });
+        
+        // Show toast notification
+        const toastType = result.warnings && result.warnings.length > 0 ? 'warning' : 'success';
+        window.dispatchEvent(new CustomEvent('showToast', {
+          detail: { 
+            message: result.warnings && result.warnings.length > 0 
+              ? `Menu uploaded with ${result.warnings.length} warning(s). Check details below.`
+              : 'Menu uploaded successfully!', 
+            type: toastType, 
+            duration: result.warnings && result.warnings.length > 0 ? 5000 : 3000, 
+            id: Date.now() 
+          }
+        }));
+      } else {
+        throw new Error(result.error || 'Failed to upload menu');
+      }
       
       // Clear file input
       if (fileInputRef.current) {
