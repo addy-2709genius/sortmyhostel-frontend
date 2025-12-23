@@ -33,7 +33,7 @@ const YesterdayImpact = () => {
     return null; // Don't show anything while loading
   }
 
-  if (!wastageData || wastageData.wasted === 0) {
+  if (!wastageData || !wastageData.wasted || wastageData.wasted === 0) {
     return null; // Don't show if no wastage data
   }
 

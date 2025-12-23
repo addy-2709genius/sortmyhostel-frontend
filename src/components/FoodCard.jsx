@@ -113,6 +113,9 @@ const FoodCard = ({ food, onUpdate, isCurrentDay = false }) => {
         detail: { message: 'Thank you for your feedback!', type: 'success', duration: 2000, id: Date.now() }
       }));
       
+      // Trigger event to refresh community feedback section
+      window.dispatchEvent(new CustomEvent('commentSubmitted'));
+      
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error submitting comment:', error);

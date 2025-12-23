@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { adminLogin } from '../services/api';
 import '../styles/adminLogin.css';
 
 const AdminLogin = () => {
@@ -9,27 +10,24 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const ADMIN_EMAIL = 'sortmyhostel@aaditya.com';
-  const ADMIN_PASSWORD = 'sorted@123';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    if (email.trim() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      // Store authentication token
-      const authToken = btoa(`${email}:${Date.now()}`);
-      sessionStorage.setItem('admin_auth', authToken);
-      sessionStorage.setItem('admin_email', email);
+    try {
+      const response = await adminLogin(email, password);
       
-      // Redirect to admin dashboard
-      navigate('/admin');
-    } else {
-      setError('Invalid email or password. Please try again.');
+      if (response.success) {
+        sessionStorage.setItem('admin_auth', response.data.token);
+        sessionStorage.setItem('admin_email', response.data.admin.email);
+        navigate('/admin');
+      } else {
+        setError(response.error || 'Invalid email or password. Please try again.');
+        setLoading(false);
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || 'Something went wrong. Please try again.');
       setLoading(false);
     }
   };
@@ -98,6 +96,7 @@ const AdminLogin = () => {
 };
 
 export default AdminLogin;
+
 
 
 

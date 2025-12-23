@@ -179,6 +179,26 @@
   flex-shrink: 0;
 }
 
+.student-header-link.logout-button {
+  cursor: pointer;
+  border: none;
+}
+
+.student-header-link.logout-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.student-name-display {
+  color: #FFFFFF;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+}
+
 /* Mobile Header Styles */
 @media (max-width: 640px) {
   .student-header-content {

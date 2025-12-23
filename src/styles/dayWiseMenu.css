@@ -5,6 +5,34 @@
   box-sizing: border-box;
 }
 
+.empty-day-menu {
+  text-align: center;
+  padding: var(--spacing-3xl) var(--spacing-lg);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-card);
+  margin-top: var(--spacing-lg);
+}
+
+.empty-day-menu .empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.6;
+}
+
+.empty-day-menu h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-day-menu p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 .day-tabs-container {
   margin-bottom: 2.5rem;
   padding-bottom: 1.5rem;

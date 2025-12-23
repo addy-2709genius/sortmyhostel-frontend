@@ -11,6 +11,25 @@ const StudentIssues = () => {
 
   useEffect(() => {
     fetchComments();
+    
+    // Listen for comment updates
+    const handleCommentUpdate = () => {
+      fetchComments();
+    };
+    
+    // Listen for custom event when comment is submitted
+    window.addEventListener('commentSubmitted', handleCommentUpdate);
+    // Also listen for storage events (for cross-tab updates)
+    window.addEventListener('storage', handleCommentUpdate);
+    
+    // Refresh comments every 30 seconds to catch new submissions
+    const interval = setInterval(fetchComments, 30000);
+    
+    return () => {
+      window.removeEventListener('commentSubmitted', handleCommentUpdate);
+      window.removeEventListener('storage', handleCommentUpdate);
+      clearInterval(interval);
+    };
   }, []);
 
   const getSentiment = (likes, dislikes) => {

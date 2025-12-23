@@ -96,7 +96,7 @@ const DayWiseMenu = ({ onUpdate }) => {
         </div>
       </div>
 
-      {selectedDay && daysMenu[selectedDay] && (
+      {selectedDay && daysMenu[selectedDay] ? (
         <div className="day-menu-content">
           {selectedDay !== currentDay && (
             <div className="view-only-notice">
@@ -106,8 +106,21 @@ const DayWiseMenu = ({ onUpdate }) => {
               </p>
             </div>
           )}
-          {/* Breakfast */}
-          {daysMenu[selectedDay].breakfast?.length > 0 && (
+          
+          {/* Check if day has any menu items */}
+          {(!daysMenu[selectedDay].breakfast?.length && 
+            !daysMenu[selectedDay].lunch?.length && 
+            !daysMenu[selectedDay].snacks?.length && 
+            !daysMenu[selectedDay].dinner?.length) ? (
+            <div className="empty-day-menu">
+              <div className="empty-state-icon">📅</div>
+              <h3>No menu available</h3>
+              <p>Menu for {days.find(d => d.key === selectedDay)?.label} hasn't been added yet.</p>
+            </div>
+          ) : (
+            <>
+              {/* Breakfast */}
+              {daysMenu[selectedDay].breakfast?.length > 0 && (
             <div className="meal-section meal-section-breakfast">
               <div className="meal-header">
                 <span className="meal-icon">{mealIcons.breakfast}</span>
@@ -197,8 +210,16 @@ const DayWiseMenu = ({ onUpdate }) => {
               </div>
             </div>
           )}
+            </>
+          )}
         </div>
-      )}
+      ) : selectedDay ? (
+        <div className="empty-day-menu">
+          <div className="empty-state-icon">📅</div>
+          <h3>No menu available</h3>
+          <p>Menu for {days.find(d => d.key === selectedDay)?.label} hasn't been added yet.</p>
+        </div>
+      ) : null}
     </div>
   );
 };

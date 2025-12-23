@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import DayWiseMenu from '../components/DayWiseMenu';
 import YesterdayImpact from '../components/YesterdayImpact';
@@ -7,7 +7,30 @@ import '../styles/studentHome.css';
 
 const StudentHome = () => {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [studentName, setStudentName] = useState('');
+  const navigate = useNavigate();
   const hostelName = 'Lohegaon Kitchen';
+
+  useEffect(() => {
+    // Get student name from localStorage
+    const name = localStorage.getItem('student_name');
+    if (name) {
+      setStudentName(name);
+    } else {
+      // If no token, redirect to login
+      const token = localStorage.getItem('student_token');
+      if (!token) {
+        navigate('/');
+      }
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('student_token');
+    localStorage.removeItem('student_name');
+    localStorage.removeItem('student_email');
+    navigate('/');
+  };
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -57,12 +80,17 @@ const StudentHome = () => {
                 </svg>
                 <p className="student-header-date">{today}</p>
               </div>
-              <Link to="/admin/login" className="student-header-link">
-                <span>Admin Login</span>
+              {studentName && (
+                <div className="student-name-display">
+                  <span>Welcome, {studentName}</span>
+                </div>
+              )}
+              <button onClick={handleLogout} className="student-header-link logout-button">
+                <span>Logout</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-              </Link>
+              </button>
             </div>
           </div>
         </div>
