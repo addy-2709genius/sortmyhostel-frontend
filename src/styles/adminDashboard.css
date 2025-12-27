@@ -817,6 +817,37 @@
   gap: 1rem;
 }
 
+.remove-all-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background-color: #DC2626;
+  color: var(--white);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.remove-all-button:hover:not(:disabled) {
+  background-color: #B91C1C;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+.remove-all-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.remove-all-button svg {
+  flex-shrink: 0;
+}
+
 .download-pdf-button {
   display: flex;
   align-items: center;
@@ -872,7 +903,8 @@
     align-items: stretch;
   }
 
-  .download-pdf-button {
+  .download-pdf-button,
+  .remove-all-button {
     width: 100%;
     justify-content: center;
   }

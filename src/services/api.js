@@ -169,6 +169,25 @@ export const removeMenuItem = async (day, meal, foodName) => {
   }
 };
 
+export const removeAllMenuItems = async () => {
+  try {
+    const adminToken = sessionStorage.getItem('admin_auth');
+    if (!adminToken) {
+      throw new Error('Admin authentication required');
+    }
+    
+    const response = await axios.delete(`${API_BASE_URL}/menu/remove-all`, {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error removing all menu items:', error);
+    throw error;
+  }
+};
+
 // Feedback API functions
 export const submitFeedback = async (foodId, feedbackType) => {
   try {

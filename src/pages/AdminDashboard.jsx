@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { getAnalytics, getWastageData, submitWastage, getDislikedFoodIssues, deleteComment, addManualMenuItem, updateMenuFromExcel, getAllDaysMenu, removeMenuItem } from '../services/api';
+import { getAnalytics, getWastageData, submitWastage, getDislikedFoodIssues, deleteComment, addManualMenuItem, updateMenuFromExcel, getAllDaysMenu, removeMenuItem, removeAllMenuItems } from '../services/api';
 import jsPDF from 'jspdf';
 import '../styles/adminDashboard.css';
 
@@ -411,6 +411,62 @@ const AdminDashboard = () => {
     } finally {
       setRemovingMenuItem(false);
       setTimeout(() => setRemoveMessage({ type: '', text: '' }), 3000);
+    }
+  };
+
+  // Handle remove all menu items
+  const handleRemoveAllMenuItems = async () => {
+    const confirmMessage = 'Do you want to delete the whole menu? This action cannot be undone.';
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    // Double confirmation for safety
+    const doubleConfirm = window.confirm('⚠️ WARNING: This will delete ALL menu items from ALL days and meals. Are you absolutely sure?');
+    if (!doubleConfirm) {
+      return;
+    }
+
+    setRemovingAllItems(true);
+    try {
+      const result = await removeAllMenuItems();
+      const deletedCount = result.deletedCount || 0;
+      
+      // Show success toast
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: { 
+          message: `All menu items removed successfully! (${deletedCount} items deleted)`, 
+          type: 'success', 
+          duration: 3000, 
+          id: Date.now() 
+        }
+      }));
+      
+      // Refresh data
+      setTimeout(() => {
+        fetchData();
+      }, 500);
+      
+      // Trigger menu update event for all students
+      window.dispatchEvent(new Event('menuUpdated'));
+      
+      // Also dispatch to localStorage for cross-tab communication
+      localStorage.setItem('menuLastUpdated', Date.now().toString());
+    } catch (error) {
+      console.error('Error removing all menu items:', error);
+      const errorMsg = error.response?.data?.error || 'Failed to remove all menu items';
+      
+      // Show error toast
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: { 
+          message: errorMsg, 
+          type: 'error', 
+          duration: 3000, 
+          id: Date.now() 
+        }
+      }));
+    } finally {
+      setRemovingAllItems(false);
     }
   };
 
@@ -1129,6 +1185,31 @@ const AdminDashboard = () => {
         <div className="manual-menu-section">
           <div className="manual-menu-header">
             <h2 className="chart-title">Remove Menu Item</h2>
+            <button
+              onClick={handleRemoveAllMenuItems}
+              disabled={removingAllItems || !menuData}
+              className="remove-all-button"
+              title="Remove all menu items"
+            >
+              {removingAllItems ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="spinning">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="31.416" strokeDashoffset="31.416">
+                      <animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416;0 31.416" repeatCount="indefinite"/>
+                      <animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416;-31.416" repeatCount="indefinite"/>
+                    </circle>
+                  </svg>
+                  Removing All...
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14zM10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Remove All from Menu
+                </>
+              )}
+            </button>
           </div>
           <form onSubmit={handleRemoveMenuItem} className="manual-menu-form">
             <div className="manual-menu-form-row">
