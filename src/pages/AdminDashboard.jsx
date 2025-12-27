@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const [uploadMessage, setUploadMessage] = useState({ type: '', text: '' });
   const [dislikedIssues, setDislikedIssues] = useState([]);
   const [manualMenuForm, setManualMenuForm] = useState({ day: 'monday', meal: 'breakfast', foodName: '' });
+  const commonItems = ['Pickle', 'Curd', 'Papad', 'Salad', 'Rice', 'Roti', 'BBJ', 'Milk'];
   const [addingMenuItem, setAddingMenuItem] = useState(false);
   const [menuMessage, setMenuMessage] = useState({ type: '', text: '' });
   const [formErrors, setFormErrors] = useState({});
@@ -624,21 +625,45 @@ const AdminDashboard = () => {
               </div>
               <div className="manual-menu-form-group manual-menu-form-group-flex">
                 <label className="manual-menu-label">Food Name</label>
-                <input
-                  type="text"
-                  value={manualMenuForm.foodName}
-                  onChange={(e) => {
-                    setManualMenuForm({ ...manualMenuForm, foodName: e.target.value });
-                    if (formErrors.foodName) {
-                      setFormErrors({ ...formErrors, foodName: '' });
-                    }
-                  }}
-                  className={`manual-menu-input ${formErrors.foodName ? 'input-error' : ''}`}
-                  placeholder="Enter food item name"
-                  required
-                  aria-invalid={!!formErrors.foodName}
-                  aria-describedby={formErrors.foodName ? 'foodName-error' : undefined}
-                />
+                <div className="food-name-input-group">
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setManualMenuForm({ ...manualMenuForm, foodName: e.target.value });
+                        if (formErrors.foodName) {
+                          setFormErrors({ ...formErrors, foodName: '' });
+                        }
+                        e.target.value = ''; // Reset dropdown after selection
+                      }
+                    }}
+                    className="common-items-dropdown"
+                    aria-label="Select common item"
+                  >
+                    <option value="">Quick Add (Common Items)</option>
+                    {commonItems.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="input-divider">or</span>
+                  <input
+                    type="text"
+                    value={manualMenuForm.foodName}
+                    onChange={(e) => {
+                      setManualMenuForm({ ...manualMenuForm, foodName: e.target.value });
+                      if (formErrors.foodName) {
+                        setFormErrors({ ...formErrors, foodName: '' });
+                      }
+                    }}
+                    className={`manual-menu-input ${formErrors.foodName ? 'input-error' : ''}`}
+                    placeholder="Type custom food name"
+                    required
+                    aria-invalid={!!formErrors.foodName}
+                    aria-describedby={formErrors.foodName ? 'foodName-error' : undefined}
+                  />
+                </div>
                 {formErrors.foodName && (
                   <span id="foodName-error" className="error-message">
                     {formErrors.foodName}
