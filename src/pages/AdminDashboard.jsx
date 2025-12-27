@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { getAnalytics, getWastageData, submitWastage, getDislikedFoodIssues, deleteComment, addManualMenuItem, updateMenuFromExcel } from '../services/api';
+import { getAnalytics, getWastageData, submitWastage, getDislikedFoodIssues, deleteComment, addManualMenuItem, updateMenuFromExcel, getAllDaysMenu } from '../services/api';
+import jsPDF from 'jspdf';
 import '../styles/adminDashboard.css';
 
 const AdminDashboard = () => {
@@ -20,6 +21,8 @@ const AdminDashboard = () => {
   const [addingMenuItem, setAddingMenuItem] = useState(false);
   const [menuMessage, setMenuMessage] = useState({ type: '', text: '' });
   const [formErrors, setFormErrors] = useState({});
+  const [menuData, setMenuData] = useState(null);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -42,14 +45,16 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [analyticsRes, wastageRes, issuesRes] = await Promise.all([
+      const [analyticsRes, wastageRes, issuesRes, menuRes] = await Promise.all([
         getAnalytics(),
         getWastageData(),
         getDislikedFoodIssues(),
+        getAllDaysMenu(),
       ]);
       setAnalytics(analyticsRes.data);
       setWastageData(wastageRes.data);
       setDislikedIssues(issuesRes.data);
+      setMenuData(menuRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
