@@ -553,7 +553,7 @@ const AdminDashboard = () => {
                   <div className="comment-text-grouped">
                     {group.comments.map((commentText, commentIndex) => (
                       <span key={commentIndex} className="comment-text-inline">
-                        {commentText}
+                        "{commentText}"
                         {commentIndex < group.comments.length - 1 && <span className="comment-separator">, </span>}
                       </span>
                     ))}
