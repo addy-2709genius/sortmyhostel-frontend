@@ -6,8 +6,10 @@ import '../styles/studentIssues.css';
 const StudentIssues = () => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dayFilter, setDayFilter] = useState('all');
   const [mealFilter, setMealFilter] = useState('all');
   const [sentimentFilter, setSentimentFilter] = useState('all');
+  const [visibleCount, setVisibleCount] = useState(10);
 
   useEffect(() => {
     fetchComments();
@@ -42,9 +44,21 @@ const StudentIssues = () => {
     return 'mixed';
   };
 
-  // Memoize filtered comments for performance
+  // Memoize filtered and sorted comments for performance
   const filteredComments = useMemo(() => {
     let filtered = [...comments];
+
+    // Sort by newest first (by timestamp)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.timestamp || 0);
+      const dateB = new Date(b.timestamp || 0);
+      return dateB - dateA; // Newest first
+    });
+
+    // Apply day filter
+    if (dayFilter !== 'all') {
+      filtered = filtered.filter(comment => comment.day === dayFilter);
+    }
 
     // Apply meal filter
     if (mealFilter !== 'all') {
@@ -60,7 +74,18 @@ const StudentIssues = () => {
     }
 
     return filtered;
-  }, [comments, mealFilter, sentimentFilter]);
+  }, [comments, dayFilter, mealFilter, sentimentFilter]);
+
+  // Get visible comments (paginated)
+  const visibleComments = useMemo(() => {
+    return filteredComments.slice(0, visibleCount);
+  }, [filteredComments, visibleCount]);
+
+  const hasMore = filteredComments.length > visibleCount;
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 10);
+  };
 
   const fetchComments = async () => {
     setLoading(true);
@@ -139,17 +164,41 @@ const StudentIssues = () => {
         <div className="header-content">
           <h2 className="student-issues-title">Community Feedback</h2>
           <p className="student-issues-subtitle">
-            {filteredComments.length} {filteredComments.length === 1 ? 'comment' : 'comments'}
+            Showing {visibleComments.length} of {filteredComments.length} {filteredComments.length === 1 ? 'comment' : 'comments'}
           </p>
         </div>
         
         {/* Filters */}
         <div className="feedback-filters">
           <div className="filter-group">
+            <label className="filter-label">Day:</label>
+            <select 
+              value={dayFilter} 
+              onChange={(e) => {
+                setDayFilter(e.target.value);
+                setVisibleCount(10); // Reset pagination when filter changes
+              }}
+              className="filter-select"
+            >
+              <option value="all">All Days</option>
+              <option value="monday">Monday</option>
+              <option value="tuesday">Tuesday</option>
+              <option value="wednesday">Wednesday</option>
+              <option value="thursday">Thursday</option>
+              <option value="friday">Friday</option>
+              <option value="saturday">Saturday</option>
+              <option value="sunday">Sunday</option>
+            </select>
+          </div>
+          
+          <div className="filter-group">
             <label className="filter-label">Meal:</label>
             <select 
               value={mealFilter} 
-              onChange={(e) => setMealFilter(e.target.value)}
+              onChange={(e) => {
+                setMealFilter(e.target.value);
+                setVisibleCount(10); // Reset pagination when filter changes
+              }}
               className="filter-select"
             >
               <option value="all">All Meals</option>
@@ -164,7 +213,10 @@ const StudentIssues = () => {
             <label className="filter-label">Sentiment:</label>
             <select 
               value={sentimentFilter} 
-              onChange={(e) => setSentimentFilter(e.target.value)}
+              onChange={(e) => {
+                setSentimentFilter(e.target.value);
+                setVisibleCount(10); // Reset pagination when filter changes
+              }}
               className="filter-select"
             >
               <option value="all">All</option>
@@ -200,42 +252,44 @@ const StudentIssues = () => {
           )}
         </div>
       ) : (
-        <div className="comments-feed">
-          {filteredComments.map((comment) => (
-            <div key={comment.id} className="comment-card">
-              <div className="comment-card-header">
-                <div className="comment-food-info">
-                  <h3 className="comment-food-name">{comment.foodName}</h3>
-                  <div className="comment-meta">
-                    <span className="comment-day-meal">
+        <>
+          <div className="comments-feed">
+            {visibleComments.map((comment) => (
+              <div key={comment.id} className="comment-card comment-card-compact">
+                <div className="comment-card-header-compact">
+                  <div className="comment-food-info-compact">
+                    <span className="comment-food-name-compact">{comment.foodName}</span>
+                    <span className="comment-meta-compact">
                       {formatDayName(comment.day)} • {formatMealName(comment.meal)}
                     </span>
-                    {comment.date && (
-                      <span className="comment-date">{formatDate(comment.date)}</span>
-                    )}
                   </div>
+                  {getSentimentBadge(comment.likes, comment.dislikes)}
                 </div>
-                {getSentimentBadge(comment.likes, comment.dislikes)}
-              </div>
-              
-              <div className="comment-content">
-                <p className="comment-text">"{comment.text}"</p>
-              </div>
-              
-              <div className="comment-card-footer">
-                <div className="comment-stats">
-                  <span className="comment-stat comment-stat-like">
-                    <span className="comment-icon-like">👍</span> {comment.likes}
-                  </span>
-                  <span className="comment-stat comment-stat-dislike">
-                    <span className="comment-icon-dislike">👎</span> {comment.dislikes}
-                  </span>
+                
+                <p className="comment-text-compact">"{comment.text}"</p>
+                
+                <div className="comment-card-footer-compact">
+                  <div className="comment-stats-compact">
+                    <span className="comment-stat-compact">👍 {comment.likes}</span>
+                    <span className="comment-stat-compact">👎 {comment.dislikes}</span>
+                  </div>
+                  <span className="comment-timestamp-compact">{formatTimestamp(comment.timestamp)}</span>
                 </div>
-                <span className="comment-timestamp">{formatTimestamp(comment.timestamp)}</span>
               </div>
+            ))}
+          </div>
+          
+          {hasMore && (
+            <div className="load-more-container">
+              <button 
+                onClick={handleLoadMore}
+                className="load-more-button"
+              >
+                Load More Comments ({filteredComments.length - visibleCount} remaining)
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );
