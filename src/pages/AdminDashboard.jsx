@@ -365,6 +365,35 @@ const AdminDashboard = () => {
     return allComments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   };
 
+  // Group comments by food item (same food, day, meal)
+  const getGroupedComments = () => {
+    const grouped = {};
+    dislikedIssues.forEach((issue) => {
+      if (issue.comments && issue.comments.length > 0) {
+        const key = `${issue.foodId}-${issue.day}-${issue.meal}`;
+        if (!grouped[key]) {
+          grouped[key] = {
+            foodName: issue.foodName,
+            foodId: issue.foodId,
+            day: issue.day,
+            meal: issue.meal,
+            date: issue.date,
+            likes: issue.likes,
+            dislikes: issue.dislikes,
+            comments: [],
+            commentIds: [],
+          };
+        }
+        issue.comments.forEach((comment) => {
+          grouped[key].comments.push(comment.text);
+          grouped[key].commentIds.push(comment.id);
+        });
+      }
+    });
+    // Sort by dislikes (highest first)
+    return Object.values(grouped).sort((a, b) => b.dislikes - a.dislikes);
+  };
+
   // Prepare chart data for likes vs dislikes
   const chartData = analytics?.foodItems
     ?.map(item => ({
@@ -485,51 +514,66 @@ const AdminDashboard = () => {
           <div className="issues-section-header">
             <h2 className="chart-title">Disliked Food Issues & Comments</h2>
             <p className="issues-section-subtitle">
-              All comments from disliked food items ({getAllComments().length} total)
+              All comments from disliked food items ({getAllComments().length} total comments, {getGroupedComments().length} food items)
             </p>
           </div>
 
-          {getAllComments().length === 0 ? (
+          {getGroupedComments().length === 0 ? (
             <div className="no-issues-message">
               <p>No comments found for disliked items.</p>
             </div>
           ) : (
             <div className="all-comments-list">
-              {getAllComments().map((comment) => (
-                <div key={comment.id} className="comment-item comment-item-full">
+              {getGroupedComments().map((group, index) => (
+                <div key={`${group.foodId}-${index}`} className="comment-item comment-item-grouped">
                   <div className="comment-header">
                     <div className="comment-food-info">
-                      <h4 className="comment-food-name">{comment.foodName}</h4>
+                      <h4 className="comment-food-name">{group.foodName}</h4>
                       <div className="comment-meta">
                         <span className="comment-day-meal">
-                          {formatDayName(comment.day)} • {formatMealName(comment.meal)}
+                          {formatDayName(group.day)} • {formatMealName(group.meal)}
                         </span>
-                        {comment.date && (
-                          <span className="comment-date">{formatDate(comment.date)}</span>
+                        {group.date && (
+                          <span className="comment-date">{formatDate(group.date)}</span>
                         )}
                       </div>
                     </div>
                     <div className="comment-stats">
                       <span className="comment-stat comment-stat-like">
-                        <span className="comment-icon-like">👍</span> {comment.likes}
+                        <span className="comment-icon-like">👍</span> {group.likes}
                       </span>
                       <span className="comment-stat comment-stat-dislike">
-                        <span className="comment-icon-dislike">👎</span> {comment.dislikes}
+                        <span className="comment-icon-dislike">👎</span> {group.dislikes}
+                      </span>
+                      <span className="comment-count-badge">
+                        {group.comments.length} {group.comments.length === 1 ? 'comment' : 'comments'}
                       </span>
                     </div>
                   </div>
-                  <p className="comment-text">{comment.text}</p>
+                  <div className="comment-text-grouped">
+                    {group.comments.map((commentText, commentIndex) => (
+                      <span key={commentIndex} className="comment-text-inline">
+                        {commentText}
+                        {commentIndex < group.comments.length - 1 && <span className="comment-separator">, </span>}
+                      </span>
+                    ))}
+                  </div>
                   <div className="comment-footer">
                     <span className="comment-time">
-                      {new Date(comment.timestamp).toLocaleString()}
+                      {group.comments.length} {group.comments.length === 1 ? 'comment' : 'comments'} total
                     </span>
-                    <button
-                      onClick={() => handleDeleteComment(comment.foodId, comment.id)}
-                      className="delete-comment-button"
-                      title="Delete abusive comment"
-                    >
-                      Delete
-                    </button>
+                    <div className="comment-delete-group">
+                      {group.commentIds.map((commentId, idx) => (
+                        <button
+                          key={commentId}
+                          onClick={() => handleDeleteComment(group.foodId, commentId)}
+                          className="delete-comment-button delete-comment-inline"
+                          title={`Delete comment: ${group.comments[idx]}`}
+                        >
+                          Delete {idx + 1}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
