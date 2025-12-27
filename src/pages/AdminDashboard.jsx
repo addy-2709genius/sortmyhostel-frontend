@@ -347,6 +347,155 @@ const AdminDashboard = () => {
     return day.charAt(0).toUpperCase() + day.slice(1);
   };
 
+  // Generate PDF from menu data
+  const generateMenuPDF = async () => {
+    if (!menuData) {
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: { message: 'No menu data available. Please upload or add menu items first.', type: 'error', duration: 3000, id: Date.now() }
+      }));
+      return;
+    }
+
+    setDownloadingPDF(true);
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 20;
+      const margin = 15;
+      const lineHeight = 7;
+      const sectionSpacing = 10;
+
+      // Header
+      pdf.setFontSize(20);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Weekly Menu', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'normal');
+      const currentDate = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      pdf.text(`Generated on: ${currentDate}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += sectionSpacing;
+
+      // Day order
+      const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const mealOrder = ['breakfast', 'lunch', 'snacks', 'dinner'];
+      const mealLabels = {
+        breakfast: 'Breakfast',
+        lunch: 'Lunch',
+        snacks: 'Snacks',
+        dinner: 'Dinner'
+      };
+
+      // Iterate through each day
+      dayOrder.forEach((day, dayIndex) => {
+        const dayData = menuData[day];
+        if (!dayData) return;
+
+        // Check if we need a new page
+        if (yPosition > pageHeight - 60) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        // Day Header
+        pdf.setFontSize(16);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(30, 58, 138); // Navy color
+        pdf.text(formatDayName(day), margin, yPosition);
+        yPosition += lineHeight + 2;
+
+        // Date if available
+        if (dayData.date) {
+          pdf.setFontSize(10);
+          pdf.setFont(undefined, 'italic');
+          pdf.setTextColor(100, 100, 100);
+          const dateStr = new Date(dayData.date).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          });
+          pdf.text(`Date: ${dateStr}`, margin, yPosition);
+          yPosition += lineHeight;
+        }
+
+        // Iterate through each meal
+        mealOrder.forEach((meal) => {
+          const mealItems = dayData[meal];
+          if (!mealItems || !Array.isArray(mealItems) || mealItems.length === 0) return;
+
+          // Check if we need a new page
+          if (yPosition > pageHeight - 40) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+
+          // Meal Header
+          pdf.setFontSize(12);
+          pdf.setFont(undefined, 'bold');
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(`  ${mealLabels[meal]}:`, margin + 5, yPosition);
+          yPosition += lineHeight;
+
+          // Food items
+          pdf.setFontSize(10);
+          pdf.setFont(undefined, 'normal');
+          mealItems.forEach((item) => {
+            if (yPosition > pageHeight - 20) {
+              pdf.addPage();
+              yPosition = 20;
+            }
+            pdf.text(`    • ${item.name}`, margin + 10, yPosition);
+            yPosition += lineHeight;
+          });
+
+          yPosition += 2; // Small spacing between meals
+        });
+
+        yPosition += sectionSpacing; // Spacing between days
+      });
+
+      // Footer
+      const totalPages = pdf.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(
+          `Page ${i} of ${totalPages} - SortMyHostel Menu`,
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: 'center' }
+        );
+      }
+
+      // Generate filename with current date
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      const filename = `Weekly_Menu_${dateStr}.pdf`;
+
+      // Save PDF
+      pdf.save(filename);
+
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: { message: 'Menu PDF downloaded successfully!', type: 'success', duration: 3000, id: Date.now() }
+      }));
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: { message: 'Failed to generate PDF. Please try again.', type: 'error', duration: 3000, id: Date.now() }
+      }));
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
+
   // Get all comments from all disliked items
   const getAllComments = () => {
     const allComments = [];
@@ -755,7 +904,34 @@ const AdminDashboard = () => {
 
         {/* Manual Menu Entry Section */}
         <div className="manual-menu-section">
-          <h2 className="chart-title">Add Menu Item Manually</h2>
+          <div className="manual-menu-header">
+            <h2 className="chart-title">Add Menu Item Manually</h2>
+            <button
+              onClick={generateMenuPDF}
+              disabled={downloadingPDF || !menuData}
+              className="download-pdf-button"
+              title="Download menu as PDF"
+            >
+              {downloadingPDF ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="spinning">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="31.416" strokeDashoffset="31.416">
+                      <animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416;0 31.416" repeatCount="indefinite"/>
+                      <animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416;-31.416" repeatCount="indefinite"/>
+                    </circle>
+                  </svg>
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Download Menu PDF
+                </>
+              )}
+            </button>
+          </div>
           <form onSubmit={handleManualMenuSubmit} className="manual-menu-form">
             <div className="manual-menu-form-row">
               <div className="manual-menu-form-group">
