@@ -21,6 +21,7 @@ const AdminDashboard = () => {
   const commonItems = ['Pickle', 'Curd', 'Papad', 'Salad', 'Rice', 'Roti', 'BBJ', 'Milk'];
   const [addingMenuItem, setAddingMenuItem] = useState(false);
   const [removingMenuItem, setRemovingMenuItem] = useState(false);
+  const [removingAllItems, setRemovingAllItems] = useState(false);
   const [menuMessage, setMenuMessage] = useState({ type: '', text: '' });
   const [removeMessage, setRemoveMessage] = useState({ type: '', text: '' });
   const [formErrors, setFormErrors] = useState({});
