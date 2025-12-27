@@ -8,6 +8,28 @@ const YesterdayImpact = () => {
 
   useEffect(() => {
     fetchYesterdayWastage();
+    
+    // Listen for wastage updates from admin dashboard
+    const handleWastageUpdate = () => {
+      fetchYesterdayWastage();
+    };
+    
+    window.addEventListener('wastageUpdated', handleWastageUpdate);
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'wastageLastUpdated') {
+        handleWastageUpdate();
+      }
+    });
+    
+    // Poll for updates every 30 seconds (in case admin updates from different device)
+    const pollInterval = setInterval(() => {
+      fetchYesterdayWastage();
+    }, 30000);
+    
+    return () => {
+      window.removeEventListener('wastageUpdated', handleWastageUpdate);
+      clearInterval(pollInterval);
+    };
   }, []);
 
   const fetchYesterdayWastage = async () => {

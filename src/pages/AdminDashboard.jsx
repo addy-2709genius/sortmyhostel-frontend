@@ -102,6 +102,12 @@ const AdminDashboard = () => {
       // Refresh wastage data
       const wastageRes = await getWastageData();
       setWastageData(wastageRes.data);
+      
+      // Trigger wastage update event for all students
+      window.dispatchEvent(new Event('wastageUpdated'));
+      
+      // Also dispatch to localStorage for cross-tab communication
+      localStorage.setItem('wastageLastUpdated', Date.now().toString());
     } catch (error) {
       console.error('Error submitting wastage:', error);
       window.dispatchEvent(new CustomEvent('showToast', {
@@ -188,8 +194,11 @@ const AdminDashboard = () => {
         fetchData();
       }, 1000);
       
-      // Trigger a storage event to notify other tabs/components
+      // Trigger menu update event for all students
       window.dispatchEvent(new Event('menuUpdated'));
+      
+      // Also dispatch to localStorage for cross-tab communication
+      localStorage.setItem('menuLastUpdated', Date.now().toString());
     } catch (error) {
       console.error('Error uploading menu:', error);
       
@@ -279,6 +288,12 @@ const AdminDashboard = () => {
       setTimeout(() => {
         fetchData();
       }, 500);
+      
+      // Trigger menu update event for all students
+      window.dispatchEvent(new Event('menuUpdated'));
+      
+      // Also dispatch to localStorage for cross-tab communication
+      localStorage.setItem('menuLastUpdated', Date.now().toString());
     } catch (error) {
       console.error('Error adding menu item:', error);
       setMenuMessage({ type: 'error', text: 'Failed to add menu item' });

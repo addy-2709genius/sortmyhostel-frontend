@@ -36,11 +36,20 @@ const DayWiseMenu = ({ onUpdate }) => {
     };
     
     window.addEventListener('menuUpdated', handleMenuUpdate);
-    window.addEventListener('storage', handleMenuUpdate);
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'menuLastUpdated') {
+        handleMenuUpdate();
+      }
+    });
+    
+    // Poll for updates every 30 seconds (in case admin updates from different device)
+    const pollInterval = setInterval(() => {
+      fetchAllDaysMenu();
+    }, 30000);
     
     return () => {
       window.removeEventListener('menuUpdated', handleMenuUpdate);
-      window.removeEventListener('storage', handleMenuUpdate);
+      clearInterval(pollInterval);
     };
   }, []);
 
