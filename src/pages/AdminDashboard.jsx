@@ -383,8 +383,7 @@ const AdminDashboard = () => {
         pdf.line(startX, y + 1.5, endX, y + 1.5);
       };
 
-      // Header Section with border
-      const headerY = yPosition;
+      // Header Section (no lines)
       pdf.setFontSize(24);
       pdf.setFont(undefined, 'bold');
       pdf.setTextColor(0, 0, 0);
@@ -400,11 +399,7 @@ const AdminDashboard = () => {
         day: 'numeric' 
       });
       pdf.text(`Generated on: ${currentDate}`, pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 8;
-
-      // Draw line under header
-      drawDoubleLine(yPosition, margin, rightMargin);
-      yPosition += sectionSpacing;
+      yPosition += 15; // Gap after header
 
       // Day order
       const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -425,20 +420,14 @@ const AdminDashboard = () => {
         if (yPosition > pageHeight - 70) {
           pdf.addPage();
           yPosition = 20;
-          // Redraw header line on new page
-          drawDoubleLine(yPosition - 5, margin, rightMargin);
         }
 
-        // Day Header with underline
+        // Day Header (no underline)
         pdf.setFontSize(18);
         pdf.setFont(undefined, 'bold');
         pdf.setTextColor(0, 0, 0);
         pdf.text(formatDayName(day).toUpperCase(), margin, yPosition);
-        yPosition += lineHeight + 3;
-
-        // Draw line under day header
-        drawLine(yPosition, margin, rightMargin, 0.8);
-        yPosition += 5;
+        yPosition += lineHeight + 5; // Gap after day header
 
         // Date if available
         if (dayData.date) {
@@ -463,8 +452,6 @@ const AdminDashboard = () => {
           if (yPosition > pageHeight - 50) {
             pdf.addPage();
             yPosition = 20;
-            // Redraw header line on new page
-            drawDoubleLine(yPosition - 5, margin, rightMargin);
           }
 
           // Meal Header with bold
@@ -482,31 +469,29 @@ const AdminDashboard = () => {
             if (yPosition > pageHeight - 20) {
               pdf.addPage();
               yPosition = 20;
-              // Redraw header line on new page
-              drawDoubleLine(yPosition - 5, margin, rightMargin);
             }
             pdf.text(`  • ${item.name}`, margin + 10, yPosition);
             yPosition += lineHeight + 1;
           });
 
-          yPosition += 3; // Spacing between meals
+          yPosition += 5; // Gap between meals
         });
 
-        // Draw separator line after each day
-        yPosition += 5;
-        drawLine(yPosition, margin, rightMargin, 0.3);
-        yPosition += sectionSpacing; // Spacing between days
+        // Draw separator line between days (not after the last day)
+        const isLastDay = dayIndex === dayOrder.length - 1 || !menuData[dayOrder[dayIndex + 1]];
+        if (!isLastDay) {
+          yPosition += 8; // Gap before line
+          drawLine(yPosition, margin, rightMargin, 0.5);
+          yPosition += 12; // Gap after line
+        } else {
+          yPosition += 5; // Small gap at the end
+        }
       });
 
-      // Footer with line
+      // Footer (no line)
       const totalPages = pdf.internal.pages.length - 1;
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
-        
-        // Draw footer line
-        const footerY = pageHeight - 15;
-        drawLine(footerY, margin, rightMargin, 0.5);
-        
         pdf.setFontSize(9);
         pdf.setFont(undefined, 'bold');
         pdf.setTextColor(0, 0, 0);
