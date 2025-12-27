@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { submitFeedback, submitComment } from '../services/api';
-import { hasUserVoted, getUserVote, saveUserVote } from '../utils/storage';
 import '../styles/foodCard.css';
 
 const FoodCard = ({ food, onUpdate, isCurrentDay = false }) => {
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localLikes, setLocalLikes] = useState(food.likes);
-  const [localDislikes, setLocalDislikes] = useState(food.dislikes);
-  const userVote = getUserVote(food.id);
-  const hasVoted = hasUserVoted(food.id);
+  const [localLikes, setLocalLikes] = useState(food.likes || 0);
+  const [localDislikes, setLocalDislikes] = useState(food.dislikes || 0);
+  // Use userVote from API response (food.userVote) instead of localStorage
+  const userVote = food.userVote || null;
+  const hasVoted = userVote !== null;
   
   // Disable interactions if not current day
   const canInteract = isCurrentDay;
@@ -36,13 +36,13 @@ const FoodCard = ({ food, onUpdate, isCurrentDay = false }) => {
       // Add like
       setLocalLikes(prev => prev + 1);
       await submitFeedback(food.id, 'like');
-      saveUserVote(food.id, 'like');
       
       // Show success toast
       window.dispatchEvent(new CustomEvent('showToast', {
         detail: { message: `You liked ${food.name}!`, type: 'success', duration: 2000, id: Date.now() }
       }));
       
+      // Refresh data to get updated userVote from server
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error submitting like:', error);
@@ -68,7 +68,6 @@ const FoodCard = ({ food, onUpdate, isCurrentDay = false }) => {
       // Add dislike
       setLocalDislikes(prev => prev + 1);
       await submitFeedback(food.id, 'dislike');
-      saveUserVote(food.id, 'dislike');
       
       // Auto-open comment box when disliked
       setShowCommentBox(true);
@@ -78,6 +77,7 @@ const FoodCard = ({ food, onUpdate, isCurrentDay = false }) => {
         detail: { message: 'Please share what went wrong to help us improve.', type: 'info', duration: 3000, id: Date.now() }
       }));
       
+      // Refresh data to get updated userVote from server
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error submitting dislike:', error);

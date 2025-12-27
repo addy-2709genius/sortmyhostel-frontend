@@ -64,7 +64,15 @@ export const adminLogin = async (email, password) => {
 // Menu API functions
 export const getAllDaysMenu = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/menu/all-days`);
+    const studentToken = localStorage.getItem('student_token');
+    const headers = {};
+    if (studentToken) {
+      headers['Authorization'] = `Bearer ${studentToken}`;
+    }
+    
+    const response = await axios.get(`${API_BASE_URL}/menu/all-days`, {
+      headers,
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching all days menu:', error);
@@ -74,7 +82,15 @@ export const getAllDaysMenu = async () => {
 
 export const getDayWiseMenu = async (day) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/menu/day/${day}`);
+    const studentToken = localStorage.getItem('student_token');
+    const headers = {};
+    if (studentToken) {
+      headers['Authorization'] = `Bearer ${studentToken}`;
+    }
+    
+    const response = await axios.get(`${API_BASE_URL}/menu/day/${day}`, {
+      headers,
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching day menu:', error);
@@ -132,15 +148,22 @@ export const addManualMenuItem = async (day, meal, foodName) => {
 // Feedback API functions
 export const submitFeedback = async (foodId, feedbackType) => {
   try {
-    const userId = getAnonymousUserId();
+    const studentToken = localStorage.getItem('student_token');
+    const userId = getAnonymousUserId(); // Fallback for anonymous users
+    
+    const headers = {};
+    if (studentToken) {
+      headers['Authorization'] = `Bearer ${studentToken}`;
+    } else {
+      headers['x-user-id'] = userId;
+    }
+    
     const response = await axios.post(`${API_BASE_URL}/feedback/submit`, {
       foodId,
       feedbackType,
-      userId,
+      userId: studentToken ? undefined : userId, // Only send userId if not authenticated
     }, {
-      headers: {
-        'x-user-id': userId,
-      },
+      headers,
     });
     return response.data;
   } catch (error) {
@@ -151,15 +174,22 @@ export const submitFeedback = async (foodId, feedbackType) => {
 
 export const submitComment = async (foodId, comment) => {
   try {
-    const userId = getAnonymousUserId();
+    const studentToken = localStorage.getItem('student_token');
+    const userId = getAnonymousUserId(); // Fallback for anonymous users
+    
+    const headers = {};
+    if (studentToken) {
+      headers['Authorization'] = `Bearer ${studentToken}`;
+    } else {
+      headers['x-user-id'] = userId;
+    }
+    
     const response = await axios.post(`${API_BASE_URL}/feedback/comment`, {
       foodId,
       comment,
-      userId,
+      userId: studentToken ? undefined : userId, // Only send userId if not authenticated
     }, {
-      headers: {
-        'x-user-id': userId,
-      },
+      headers,
     });
     return response.data;
   } catch (error) {
