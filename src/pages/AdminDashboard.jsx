@@ -368,6 +368,8 @@ const AdminDashboard = () => {
   // Group comments hierarchically: Day → Meal → Food → Comments
   const getGroupedCommentsByDayMeal = () => {
     const grouped = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     dislikedIssues.forEach((issue) => {
       if (issue.comments && issue.comments.length > 0) {
@@ -399,40 +401,107 @@ const AdminDashboard = () => {
             dislikes: issue.dislikes,
             comments: [],
             commentIds: [],
+            commentTimestamps: [],
+            newestCommentDate: null,
           };
           grouped[day][meal].push(foodItem);
         }
         
-        // Add comments to food item
+        // Add comments to food item with timestamps
         issue.comments.forEach((comment) => {
+          const commentDate = new Date(comment.timestamp);
           foodItem.comments.push(comment.text);
           foodItem.commentIds.push(comment.id);
-        });
-      }
-    });
-    
-    // Sort: Days in order, Meals in order, Foods by dislikes (highest first)
-    const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const mealOrder = ['breakfast', 'lunch', 'snacks', 'dinner'];
-    
-    const result = [];
-    dayOrder.forEach(day => {
-      if (grouped[day]) {
-        mealOrder.forEach(meal => {
-          if (grouped[day][meal] && grouped[day][meal].length > 0) {
-            // Sort foods by dislikes (highest first)
-            const sortedFoods = grouped[day][meal].sort((a, b) => b.dislikes - a.dislikes);
-            result.push({
-              day,
-              meal,
-              foods: sortedFoods,
-            });
+          foodItem.commentTimestamps.push(comment.timestamp);
+          
+          // Track newest comment date
+          if (!foodItem.newestCommentDate || commentDate > new Date(foodItem.newestCommentDate)) {
+            foodItem.newestCommentDate = comment.timestamp;
           }
         });
       }
     });
     
-    return result;
+    // Sort comments within each food item by newest first
+    Object.keys(grouped).forEach(day => {
+      Object.keys(grouped[day]).forEach(meal => {
+        grouped[day][meal].forEach(foodItem => {
+          // Create array of indices sorted by timestamp (newest first)
+          const sortedIndices = foodItem.commentTimestamps
+            .map((ts, idx) => ({ ts, idx }))
+            .sort((a, b) => new Date(b.ts) - new Date(a.ts))
+            .map(item => item.idx);
+          
+          // Reorder comments, commentIds, and timestamps
+          foodItem.comments = sortedIndices.map(idx => foodItem.comments[idx]);
+          foodItem.commentIds = sortedIndices.map(idx => foodItem.commentIds[idx]);
+          foodItem.commentTimestamps = sortedIndices.map(idx => foodItem.commentTimestamps[idx]);
+        });
+      });
+    });
+    
+    // Get today's day name
+    const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const mealOrder = ['breakfast', 'lunch', 'snacks', 'dinner'];
+    
+    // Separate today's items and other items
+    const todayItems = [];
+    const otherItems = [];
+    
+    dayOrder.forEach(day => {
+      if (grouped[day]) {
+        mealOrder.forEach(meal => {
+          if (grouped[day][meal] && grouped[day][meal].length > 0) {
+            // Sort foods by newest comment date (newest first), then by dislikes
+            const sortedFoods = grouped[day][meal].sort((a, b) => {
+              const aDate = a.newestCommentDate ? new Date(a.newestCommentDate) : new Date(0);
+              const bDate = b.newestCommentDate ? new Date(b.newestCommentDate) : new Date(0);
+              
+              // First sort by newest comment date (newest first)
+              if (bDate.getTime() !== aDate.getTime()) {
+                return bDate.getTime() - aDate.getTime();
+              }
+              
+              // Then by dislikes (highest first)
+              return b.dislikes - a.dislikes;
+            });
+            
+            const item = {
+              day,
+              meal,
+              foods: sortedFoods,
+              newestCommentDate: sortedFoods[0]?.newestCommentDate || null,
+            };
+            
+            if (day === todayDayName) {
+              todayItems.push(item);
+            } else {
+              otherItems.push(item);
+            }
+          }
+        });
+      }
+    });
+    
+    // Sort today's items by newest comment first
+    todayItems.sort((a, b) => {
+      if (!a.newestCommentDate && !b.newestCommentDate) return 0;
+      if (!a.newestCommentDate) return 1;
+      if (!b.newestCommentDate) return -1;
+      return new Date(b.newestCommentDate) - new Date(a.newestCommentDate);
+    });
+    
+    // Sort other items by newest comment first
+    otherItems.sort((a, b) => {
+      if (!a.newestCommentDate && !b.newestCommentDate) return 0;
+      if (!a.newestCommentDate) return 1;
+      if (!b.newestCommentDate) return -1;
+      return new Date(b.newestCommentDate) - new Date(a.newestCommentDate);
+    });
+    
+    // Return today's items first, then others
+    return [...todayItems, ...otherItems];
   };
 
   // Prepare chart data for likes vs dislikes
