@@ -365,14 +365,31 @@ const AdminDashboard = () => {
     return allComments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   };
 
-  // Group comments by food item (same food, day, meal)
-  const getGroupedComments = () => {
+  // Group comments hierarchically: Day → Meal → Food → Comments
+  const getGroupedCommentsByDayMeal = () => {
     const grouped = {};
+    
     dislikedIssues.forEach((issue) => {
       if (issue.comments && issue.comments.length > 0) {
-        const key = `${issue.foodId}-${issue.day}-${issue.meal}`;
-        if (!grouped[key]) {
-          grouped[key] = {
+        const day = issue.day;
+        const meal = issue.meal;
+        const foodKey = `${issue.foodId}-${day}-${meal}`;
+        
+        // Initialize day if not exists
+        if (!grouped[day]) {
+          grouped[day] = {};
+        }
+        
+        // Initialize meal if not exists
+        if (!grouped[day][meal]) {
+          grouped[day][meal] = [];
+        }
+        
+        // Check if food already exists in this meal
+        let foodItem = grouped[day][meal].find(f => f.foodId === issue.foodId);
+        
+        if (!foodItem) {
+          foodItem = {
             foodName: issue.foodName,
             foodId: issue.foodId,
             day: issue.day,
@@ -383,15 +400,39 @@ const AdminDashboard = () => {
             comments: [],
             commentIds: [],
           };
+          grouped[day][meal].push(foodItem);
         }
+        
+        // Add comments to food item
         issue.comments.forEach((comment) => {
-          grouped[key].comments.push(comment.text);
-          grouped[key].commentIds.push(comment.id);
+          foodItem.comments.push(comment.text);
+          foodItem.commentIds.push(comment.id);
         });
       }
     });
-    // Sort by dislikes (highest first)
-    return Object.values(grouped).sort((a, b) => b.dislikes - a.dislikes);
+    
+    // Sort: Days in order, Meals in order, Foods by dislikes (highest first)
+    const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const mealOrder = ['breakfast', 'lunch', 'snacks', 'dinner'];
+    
+    const result = [];
+    dayOrder.forEach(day => {
+      if (grouped[day]) {
+        mealOrder.forEach(meal => {
+          if (grouped[day][meal] && grouped[day][meal].length > 0) {
+            // Sort foods by dislikes (highest first)
+            const sortedFoods = grouped[day][meal].sort((a, b) => b.dislikes - a.dislikes);
+            result.push({
+              day,
+              meal,
+              foods: sortedFoods,
+            });
+          }
+        });
+      }
+    });
+    
+    return result;
   };
 
   // Prepare chart data for likes vs dislikes
@@ -514,66 +555,73 @@ const AdminDashboard = () => {
           <div className="issues-section-header">
             <h2 className="chart-title">Disliked Food Issues & Comments</h2>
             <p className="issues-section-subtitle">
-              All comments from disliked food items ({getAllComments().length} total comments, {getGroupedComments().length} food items)
+              All comments from disliked food items ({getAllComments().length} total comments)
             </p>
           </div>
 
-          {getGroupedComments().length === 0 ? (
+          {getGroupedCommentsByDayMeal().length === 0 ? (
             <div className="no-issues-message">
               <p>No comments found for disliked items.</p>
             </div>
           ) : (
             <div className="all-comments-list">
-              {getGroupedComments().map((group, index) => (
-                <div key={`${group.foodId}-${index}`} className="comment-item comment-item-grouped">
-                  <div className="comment-header">
-                    <div className="comment-food-info">
-                      <h4 className="comment-food-name">{group.foodName}</h4>
-                      <div className="comment-meta">
-                        <span className="comment-day-meal">
-                          {formatDayName(group.day)} • {formatMealName(group.meal)}
-                        </span>
-                        {group.date && (
-                          <span className="comment-date">{formatDate(group.date)}</span>
-                        )}
+              {getGroupedCommentsByDayMeal().map((dayMealGroup, dayMealIndex) => (
+                <div key={`${dayMealGroup.day}-${dayMealGroup.meal}-${dayMealIndex}`} className="day-meal-group">
+                  <div className="day-meal-header">
+                    <h3 className="day-meal-title">
+                      <span className="day-title">{formatDayName(dayMealGroup.day)}</span>
+                      <span className="meal-title">{formatMealName(dayMealGroup.meal)}</span>
+                    </h3>
+                  </div>
+                  <div className="foods-list">
+                    {dayMealGroup.foods.map((food, foodIndex) => (
+                      <div key={`${food.foodId}-${foodIndex}`} className="comment-item comment-item-grouped">
+                        <div className="comment-header">
+                          <div className="comment-food-info">
+                            <h4 className="comment-food-name">{food.foodName}</h4>
+                            {food.date && (
+                              <span className="comment-date">{formatDate(food.date)}</span>
+                            )}
+                          </div>
+                          <div className="comment-stats">
+                            <span className="comment-stat comment-stat-like">
+                              <span className="comment-icon-like">👍</span> {food.likes}
+                            </span>
+                            <span className="comment-stat comment-stat-dislike">
+                              <span className="comment-icon-dislike">👎</span> {food.dislikes}
+                            </span>
+                            <span className="comment-count-badge">
+                              {food.comments.length} {food.comments.length === 1 ? 'comment' : 'comments'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="comment-text-grouped">
+                          {food.comments.map((commentText, commentIndex) => (
+                            <span key={commentIndex} className="comment-text-inline">
+                              "{commentText}"
+                              {commentIndex < food.comments.length - 1 && <span className="comment-separator">, </span>}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="comment-footer">
+                          <span className="comment-time">
+                            {food.comments.length} {food.comments.length === 1 ? 'comment' : 'comments'} total
+                          </span>
+                          <div className="comment-delete-group">
+                            {food.commentIds.map((commentId, idx) => (
+                              <button
+                                key={commentId}
+                                onClick={() => handleDeleteComment(food.foodId, commentId)}
+                                className="delete-comment-button delete-comment-inline"
+                                title={`Delete comment: ${food.comments[idx]}`}
+                              >
+                                Delete {idx + 1}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="comment-stats">
-                      <span className="comment-stat comment-stat-like">
-                        <span className="comment-icon-like">👍</span> {group.likes}
-                      </span>
-                      <span className="comment-stat comment-stat-dislike">
-                        <span className="comment-icon-dislike">👎</span> {group.dislikes}
-                      </span>
-                      <span className="comment-count-badge">
-                        {group.comments.length} {group.comments.length === 1 ? 'comment' : 'comments'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="comment-text-grouped">
-                    {group.comments.map((commentText, commentIndex) => (
-                      <span key={commentIndex} className="comment-text-inline">
-                        "{commentText}"
-                        {commentIndex < group.comments.length - 1 && <span className="comment-separator">, </span>}
-                      </span>
                     ))}
-                  </div>
-                  <div className="comment-footer">
-                    <span className="comment-time">
-                      {group.comments.length} {group.comments.length === 1 ? 'comment' : 'comments'} total
-                    </span>
-                    <div className="comment-delete-group">
-                      {group.commentIds.map((commentId, idx) => (
-                        <button
-                          key={commentId}
-                          onClick={() => handleDeleteComment(group.foodId, commentId)}
-                          className="delete-comment-button delete-comment-inline"
-                          title={`Delete comment: ${group.comments[idx]}`}
-                        >
-                          Delete {idx + 1}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 </div>
               ))}

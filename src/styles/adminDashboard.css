@@ -766,6 +766,45 @@
 .all-comments-list {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
+}
+
+.day-meal-group {
+  background-color: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.day-meal-header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--navy);
+}
+
+.day-meal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.day-title {
+  color: var(--navy);
+}
+
+.meal-title {
+  color: var(--gray-600);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.foods-list {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
 }
 
