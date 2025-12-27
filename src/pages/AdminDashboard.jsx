@@ -363,16 +363,35 @@ const AdminDashboard = () => {
       const pageHeight = pdf.internal.pageSize.getHeight();
       let yPosition = 20;
       const margin = 15;
+      const rightMargin = pageWidth - margin;
       const lineHeight = 7;
-      const sectionSpacing = 10;
+      const sectionSpacing = 12;
+      const lineThickness = 0.5;
 
-      // Header
-      pdf.setFontSize(20);
+      // Helper function to draw horizontal line
+      const drawLine = (y, startX = margin, endX = rightMargin, thickness = lineThickness) => {
+        pdf.setLineWidth(thickness);
+        pdf.setDrawColor(0, 0, 0);
+        pdf.line(startX, y, endX, y);
+      };
+
+      // Helper function to draw double line
+      const drawDoubleLine = (y, startX = margin, endX = rightMargin) => {
+        pdf.setLineWidth(0.8);
+        pdf.setDrawColor(0, 0, 0);
+        pdf.line(startX, y, endX, y);
+        pdf.line(startX, y + 1.5, endX, y + 1.5);
+      };
+
+      // Header Section with border
+      const headerY = yPosition;
+      pdf.setFontSize(24);
       pdf.setFont(undefined, 'bold');
-      pdf.text('Weekly Menu', pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 10;
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('WEEKLY MENU', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 8;
 
-      pdf.setFontSize(12);
+      pdf.setFontSize(11);
       pdf.setFont(undefined, 'normal');
       const currentDate = new Date().toLocaleDateString('en-US', { 
         weekday: 'long', 
@@ -381,6 +400,10 @@ const AdminDashboard = () => {
         day: 'numeric' 
       });
       pdf.text(`Generated on: ${currentDate}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 8;
+
+      // Draw line under header
+      drawDoubleLine(yPosition, margin, rightMargin);
       yPosition += sectionSpacing;
 
       // Day order
@@ -399,30 +422,36 @@ const AdminDashboard = () => {
         if (!dayData) return;
 
         // Check if we need a new page
-        if (yPosition > pageHeight - 60) {
+        if (yPosition > pageHeight - 70) {
           pdf.addPage();
           yPosition = 20;
+          // Redraw header line on new page
+          drawDoubleLine(yPosition - 5, margin, rightMargin);
         }
 
-        // Day Header
-        pdf.setFontSize(16);
+        // Day Header with underline
+        pdf.setFontSize(18);
         pdf.setFont(undefined, 'bold');
-        pdf.setTextColor(30, 58, 138); // Navy color
-        pdf.text(formatDayName(day), margin, yPosition);
-        yPosition += lineHeight + 2;
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(formatDayName(day).toUpperCase(), margin, yPosition);
+        yPosition += lineHeight + 3;
+
+        // Draw line under day header
+        drawLine(yPosition, margin, rightMargin, 0.8);
+        yPosition += 5;
 
         // Date if available
         if (dayData.date) {
           pdf.setFontSize(10);
-          pdf.setFont(undefined, 'italic');
-          pdf.setTextColor(100, 100, 100);
+          pdf.setFont(undefined, 'bold');
+          pdf.setTextColor(60, 60, 60);
           const dateStr = new Date(dayData.date).toLocaleDateString('en-US', { 
             month: 'short', 
             day: 'numeric', 
             year: 'numeric' 
           });
           pdf.text(`Date: ${dateStr}`, margin, yPosition);
-          yPosition += lineHeight;
+          yPosition += lineHeight + 3;
         }
 
         // Iterate through each meal
@@ -431,46 +460,60 @@ const AdminDashboard = () => {
           if (!mealItems || !Array.isArray(mealItems) || mealItems.length === 0) return;
 
           // Check if we need a new page
-          if (yPosition > pageHeight - 40) {
+          if (yPosition > pageHeight - 50) {
             pdf.addPage();
             yPosition = 20;
+            // Redraw header line on new page
+            drawDoubleLine(yPosition - 5, margin, rightMargin);
           }
 
-          // Meal Header
-          pdf.setFontSize(12);
+          // Meal Header with bold
+          pdf.setFontSize(13);
           pdf.setFont(undefined, 'bold');
           pdf.setTextColor(0, 0, 0);
-          pdf.text(`  ${mealLabels[meal]}:`, margin + 5, yPosition);
-          yPosition += lineHeight;
+          pdf.text(`${mealLabels[meal]}:`, margin + 5, yPosition);
+          yPosition += lineHeight + 2;
 
-          // Food items
-          pdf.setFontSize(10);
+          // Food items with bullet points
+          pdf.setFontSize(11);
           pdf.setFont(undefined, 'normal');
+          pdf.setTextColor(0, 0, 0);
           mealItems.forEach((item) => {
             if (yPosition > pageHeight - 20) {
               pdf.addPage();
               yPosition = 20;
+              // Redraw header line on new page
+              drawDoubleLine(yPosition - 5, margin, rightMargin);
             }
-            pdf.text(`    • ${item.name}`, margin + 10, yPosition);
-            yPosition += lineHeight;
+            pdf.text(`  • ${item.name}`, margin + 10, yPosition);
+            yPosition += lineHeight + 1;
           });
 
-          yPosition += 2; // Small spacing between meals
+          yPosition += 3; // Spacing between meals
         });
 
+        // Draw separator line after each day
+        yPosition += 5;
+        drawLine(yPosition, margin, rightMargin, 0.3);
         yPosition += sectionSpacing; // Spacing between days
       });
 
-      // Footer
+      // Footer with line
       const totalPages = pdf.internal.pages.length - 1;
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
-        pdf.setFontSize(8);
-        pdf.setTextColor(150, 150, 150);
+        
+        // Draw footer line
+        const footerY = pageHeight - 15;
+        drawLine(footerY, margin, rightMargin, 0.5);
+        
+        pdf.setFontSize(9);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(0, 0, 0);
         pdf.text(
           `Page ${i} of ${totalPages} - SortMyHostel Menu`,
           pageWidth / 2,
-          pageHeight - 10,
+          pageHeight - 8,
           { align: 'center' }
         );
       }
