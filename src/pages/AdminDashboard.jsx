@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { getAnalytics, getWastageData, submitWastage, getDislikedFoodIssues, deleteComment, addManualMenuItem, updateMenuFromExcel, getAllDaysMenu } from '../services/api';
+import { getAnalytics, getWastageData, submitWastage, getDislikedFoodIssues, deleteComment, addManualMenuItem, updateMenuFromExcel, getAllDaysMenu, removeMenuItem } from '../services/api';
 import jsPDF from 'jspdf';
 import '../styles/adminDashboard.css';
 
@@ -17,9 +17,12 @@ const AdminDashboard = () => {
   const [uploadMessage, setUploadMessage] = useState({ type: '', text: '' });
   const [dislikedIssues, setDislikedIssues] = useState([]);
   const [manualMenuForm, setManualMenuForm] = useState({ day: 'monday', meal: 'breakfast', foodName: '' });
+  const [removeMenuForm, setRemoveMenuForm] = useState({ day: 'monday', meal: 'breakfast', foodName: '' });
   const commonItems = ['Pickle', 'Curd', 'Papad', 'Salad', 'Rice', 'Roti', 'BBJ', 'Milk'];
   const [addingMenuItem, setAddingMenuItem] = useState(false);
+  const [removingMenuItem, setRemovingMenuItem] = useState(false);
   const [menuMessage, setMenuMessage] = useState({ type: '', text: '' });
+  const [removeMessage, setRemoveMessage] = useState({ type: '', text: '' });
   const [formErrors, setFormErrors] = useState({});
   const [menuData, setMenuData] = useState(null);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
@@ -345,6 +348,70 @@ const AdminDashboard = () => {
 
   const formatDayName = (day) => {
     return day.charAt(0).toUpperCase() + day.slice(1);
+  };
+
+  // Get available food items for selected day and meal
+  const getAvailableFoodItems = () => {
+    if (!menuData || !removeMenuForm.day || !removeMenuForm.meal) {
+      return [];
+    }
+    const dayData = menuData[removeMenuForm.day];
+    if (!dayData) return [];
+    const mealItems = dayData[removeMenuForm.meal];
+    if (!mealItems || !Array.isArray(mealItems)) return [];
+    return mealItems.map(item => item.name);
+  };
+
+  // Handle remove menu item
+  const handleRemoveMenuItem = async (e) => {
+    e.preventDefault();
+    if (!removeMenuForm.foodName) {
+      setRemoveMessage({ type: 'error', text: 'Please select a food item to remove' });
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: { message: 'Please select a food item to remove', type: 'error', duration: 2000, id: Date.now() }
+      }));
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to remove "${removeMenuForm.foodName}" from ${formatDayName(removeMenuForm.day)} ${formatMealName(removeMenuForm.meal)}?`)) {
+      return;
+    }
+
+    setRemovingMenuItem(true);
+    setRemoveMessage({ type: '', text: '' });
+    try {
+      await removeMenuItem(removeMenuForm.day, removeMenuForm.meal, removeMenuForm.foodName);
+      setRemoveMessage({ type: 'success', text: 'Menu item removed successfully!' });
+      setRemoveMenuForm({ ...removeMenuForm, foodName: '' });
+      
+      // Show success toast
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: { message: 'Menu item removed successfully!', type: 'success', duration: 2000, id: Date.now() }
+      }));
+      
+      // Refresh data
+      setTimeout(() => {
+        fetchData();
+      }, 500);
+      
+      // Trigger menu update event for all students
+      window.dispatchEvent(new Event('menuUpdated'));
+      
+      // Also dispatch to localStorage for cross-tab communication
+      localStorage.setItem('menuLastUpdated', Date.now().toString());
+    } catch (error) {
+      console.error('Error removing menu item:', error);
+      const errorMsg = error.response?.data?.error || 'Failed to remove menu item';
+      setRemoveMessage({ type: 'error', text: errorMsg });
+      
+      // Show error toast
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: { message: errorMsg, type: 'error', duration: 3000, id: Date.now() }
+      }));
+    } finally {
+      setRemovingMenuItem(false);
+      setTimeout(() => setRemoveMessage({ type: '', text: '' }), 3000);
+    }
   };
 
   // Generate PDF from menu data
@@ -1053,6 +1120,87 @@ const AdminDashboard = () => {
             {menuMessage.text && (
               <div className={`manual-menu-message ${menuMessage.type}`}>
                 {menuMessage.text}
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Remove Menu Item Section */}
+        <div className="manual-menu-section">
+          <div className="manual-menu-header">
+            <h2 className="chart-title">Remove Menu Item</h2>
+          </div>
+          <form onSubmit={handleRemoveMenuItem} className="manual-menu-form">
+            <div className="manual-menu-form-row">
+              <div className="manual-menu-form-group">
+                <label className="manual-menu-label">Day</label>
+                <select
+                  value={removeMenuForm.day}
+                  onChange={(e) => {
+                    setRemoveMenuForm({ ...removeMenuForm, day: e.target.value, foodName: '' });
+                  }}
+                  className="manual-menu-select"
+                  required
+                >
+                  <option value="monday">Monday</option>
+                  <option value="tuesday">Tuesday</option>
+                  <option value="wednesday">Wednesday</option>
+                  <option value="thursday">Thursday</option>
+                  <option value="friday">Friday</option>
+                  <option value="saturday">Saturday</option>
+                  <option value="sunday">Sunday</option>
+                </select>
+              </div>
+              <div className="manual-menu-form-group">
+                <label className="manual-menu-label">Meal</label>
+                <select
+                  value={removeMenuForm.meal}
+                  onChange={(e) => {
+                    setRemoveMenuForm({ ...removeMenuForm, meal: e.target.value, foodName: '' });
+                  }}
+                  className="manual-menu-select"
+                  required
+                >
+                  <option value="breakfast">Breakfast</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="snacks">Snacks</option>
+                  <option value="dinner">Dinner</option>
+                </select>
+              </div>
+              <div className="manual-menu-form-group">
+                <label className="manual-menu-label">Food Item</label>
+                <select
+                  value={removeMenuForm.foodName}
+                  onChange={(e) => setRemoveMenuForm({ ...removeMenuForm, foodName: e.target.value })}
+                  className="manual-menu-select"
+                  required
+                  disabled={getAvailableFoodItems().length === 0}
+                >
+                  <option value="">
+                    {getAvailableFoodItems().length === 0 
+                      ? 'No items available for selected day/meal' 
+                      : 'Select food item to remove'}
+                  </option>
+                  {getAvailableFoodItems().map((foodName) => (
+                    <option key={foodName} value={foodName}>
+                      {foodName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="manual-menu-form-submit">
+                <button
+                  type="submit"
+                  disabled={removingMenuItem || getAvailableFoodItems().length === 0}
+                  className="manual-menu-button manual-menu-button-remove"
+                >
+                  {removingMenuItem ? 'Removing...' : 'Remove Item'}
+                </button>
+              </div>
+            </div>
+            {removeMessage.text && (
+              <div className={`manual-menu-message ${removeMessage.type}`}>
+                {removeMessage.text}
               </div>
             )}
           </form>

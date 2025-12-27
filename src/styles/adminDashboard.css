@@ -1119,6 +1119,15 @@
   cursor: not-allowed;
 }
 
+.manual-menu-button-remove {
+  background-color: #DC2626;
+}
+
+.manual-menu-button-remove:hover:not(:disabled) {
+  background-color: #B91C1C;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
 .manual-menu-message {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-sm);
