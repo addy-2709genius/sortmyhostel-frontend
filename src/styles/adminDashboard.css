@@ -1000,6 +1000,23 @@
   }
 }
 
+@media (max-width: 767px) {
+  .food-name-input-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .common-items-dropdown {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .input-divider {
+    text-align: center;
+    padding: 0.25rem 0;
+  }
+}
+
 @media (min-width: 1024px) {
   .charts-grid {
     grid-template-columns: repeat(2, 1fr);
