@@ -13,7 +13,23 @@ const LandingPage = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copiedField, setCopiedField] = useState(null);
   const navigate = useNavigate();
+
+  // Admin credentials
+  const ADMIN_EMAIL = 'sortmyhostel@aaditya.com';
+  const ADMIN_PASSWORD = 'sorted@123';
+  
+  // HR/Interviewer credentials
+  const HR_EMAIL = 'aadityaraj.soni@adypu.edu.in';
+  const HR_PASSWORD = 'aaditya@123';
+
+  const copyToClipboard = (text, field) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    });
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -208,6 +224,43 @@ const LandingPage = () => {
             <a href="/admin/login" className="admin-link">
               Admin Login →
             </a>
+          </div>
+
+          {/* HR/Interviewer Credentials Section */}
+          <div className="hr-credentials-section">
+            <p className="hr-note">Credentials for Admin Login & Student View (No signup required)</p>
+            
+            <div className="hr-credentials-group">
+              <div className="hr-credential-row">
+                <span className="hr-credential-label">Admin:</span>
+                <code className="hr-credential-text" onClick={() => copyToClipboard(`${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`, 'admin')}>
+                  {ADMIN_EMAIL} / {ADMIN_PASSWORD}
+                </code>
+                <button
+                  type="button"
+                  className="hr-copy-btn"
+                  onClick={() => copyToClipboard(`${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`, 'admin')}
+                  title="Copy admin credentials"
+                >
+                  {copiedField === 'admin' ? '✓' : '📋'}
+                </button>
+              </div>
+              
+              <div className="hr-credential-row">
+                <span className="hr-credential-label">HR/Interviewer:</span>
+                <code className="hr-credential-text" onClick={() => copyToClipboard(`${HR_EMAIL} / ${HR_PASSWORD}`, 'hr')}>
+                  {HR_EMAIL} / {HR_PASSWORD}
+                </code>
+                <button
+                  type="button"
+                  className="hr-copy-btn"
+                  onClick={() => copyToClipboard(`${HR_EMAIL} / ${HR_PASSWORD}`, 'hr')}
+                  title="Copy HR credentials"
+                >
+                  {copiedField === 'hr' ? '✓' : '📋'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

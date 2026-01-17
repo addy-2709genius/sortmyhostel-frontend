@@ -7,7 +7,25 @@ const YesterdayImpact = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchYesterdayWastage();
+    // Check cache first (5 minute cache)
+    const cacheKey = 'yesterdayWastageCache';
+    const cacheTime = 'yesterdayWastageCacheTime';
+    const cachedData = localStorage.getItem(cacheKey);
+    const cacheTimestamp = localStorage.getItem(cacheTime);
+    const now = Date.now();
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+    if (cachedData && cacheTimestamp && (now - parseInt(cacheTimestamp)) < CACHE_DURATION) {
+      try {
+        setWastageData(JSON.parse(cachedData));
+        setLoading(false);
+      } catch (e) {
+        // If cache is invalid, fetch fresh data
+        fetchYesterdayWastage();
+      }
+    } else {
+      fetchYesterdayWastage();
+    }
     
     // Listen for wastage updates from admin dashboard
     const handleWastageUpdate = () => {
@@ -21,10 +39,10 @@ const YesterdayImpact = () => {
       }
     });
     
-    // Poll for updates every 30 seconds (in case admin updates from different device)
+    // Poll for updates every 5 minutes (reduced from 30 seconds for better performance)
     const pollInterval = setInterval(() => {
       fetchYesterdayWastage();
-    }, 30000);
+    }, 5 * 60 * 1000);
     
     return () => {
       window.removeEventListener('wastageUpdated', handleWastageUpdate);
@@ -37,6 +55,12 @@ const YesterdayImpact = () => {
     try {
       const response = await getYesterdayWastage();
       setWastageData(response.data);
+      
+      // Cache the data
+      const cacheKey = 'yesterdayWastageCache';
+      const cacheTime = 'yesterdayWastageCacheTime';
+      localStorage.setItem(cacheKey, JSON.stringify(response.data));
+      localStorage.setItem(cacheTime, Date.now().toString());
     } catch (error) {
       console.error('Error fetching wastage data:', error);
       setWastageData(null);

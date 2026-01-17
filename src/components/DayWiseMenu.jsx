@@ -28,7 +28,28 @@ const DayWiseMenu = ({ onUpdate }) => {
   };
 
   useEffect(() => {
-    fetchAllDaysMenu();
+    // Check cache first (2 minute cache for menu)
+    const cacheKey = 'allDaysMenuCache';
+    const cacheTime = 'allDaysMenuCacheTime';
+    const cachedData = localStorage.getItem(cacheKey);
+    const cacheTimestamp = localStorage.getItem(cacheTime);
+    const now = Date.now();
+    const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+
+    if (cachedData && cacheTimestamp && (now - parseInt(cacheTimestamp)) < CACHE_DURATION) {
+      try {
+        setDaysMenu(JSON.parse(cachedData));
+        setLoading(false);
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        setCurrentDay(today);
+        setSelectedDay(today);
+      } catch (e) {
+        // If cache is invalid, fetch fresh data
+        fetchAllDaysMenu();
+      }
+    } else {
+      fetchAllDaysMenu();
+    }
     
     // Listen for menu updates from admin dashboard
     const handleMenuUpdate = () => {
@@ -42,10 +63,10 @@ const DayWiseMenu = ({ onUpdate }) => {
       }
     });
     
-    // Poll for updates every 30 seconds (in case admin updates from different device)
+    // Poll for updates every 3 minutes (reduced from 30 seconds for better performance)
     const pollInterval = setInterval(() => {
       fetchAllDaysMenu();
-    }, 30000);
+    }, 3 * 60 * 1000);
     
     return () => {
       window.removeEventListener('menuUpdated', handleMenuUpdate);
@@ -57,7 +78,15 @@ const DayWiseMenu = ({ onUpdate }) => {
     setLoading(true);
     try {
       const response = await getAllDaysMenu();
-      setDaysMenu(response.data || {});
+      const menuData = response.data || {};
+      setDaysMenu(menuData);
+      
+      // Cache the data
+      const cacheKey = 'allDaysMenuCache';
+      const cacheTime = 'allDaysMenuCacheTime';
+      localStorage.setItem(cacheKey, JSON.stringify(menuData));
+      localStorage.setItem(cacheTime, Date.now().toString());
+      
       // Set current day as default
       const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       setCurrentDay(today);

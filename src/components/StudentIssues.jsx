@@ -12,7 +12,25 @@ const StudentIssues = () => {
   const [visibleCount, setVisibleCount] = useState(10);
 
   useEffect(() => {
-    fetchComments();
+    // Check cache first (3 minute cache for comments)
+    const cacheKey = 'allCommentsCache';
+    const cacheTime = 'allCommentsCacheTime';
+    const cachedData = localStorage.getItem(cacheKey);
+    const cacheTimestamp = localStorage.getItem(cacheTime);
+    const now = Date.now();
+    const CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
+
+    if (cachedData && cacheTimestamp && (now - parseInt(cacheTimestamp)) < CACHE_DURATION) {
+      try {
+        setComments(JSON.parse(cachedData));
+        setLoading(false);
+      } catch (e) {
+        // If cache is invalid, fetch fresh data
+        fetchComments();
+      }
+    } else {
+      fetchComments();
+    }
     
     // Listen for comment updates
     const handleCommentUpdate = () => {
@@ -24,8 +42,8 @@ const StudentIssues = () => {
     // Also listen for storage events (for cross-tab updates)
     window.addEventListener('storage', handleCommentUpdate);
     
-    // Refresh comments every 30 seconds to catch new submissions
-    const interval = setInterval(fetchComments, 30000);
+    // Refresh comments every 5 minutes (reduced from 30 seconds for better performance)
+    const interval = setInterval(fetchComments, 5 * 60 * 1000);
     
     return () => {
       window.removeEventListener('commentSubmitted', handleCommentUpdate);
@@ -91,7 +109,14 @@ const StudentIssues = () => {
     setLoading(true);
     try {
       const response = await getAllComments();
-      setComments(response.data || []);
+      const commentsData = response.data || [];
+      setComments(commentsData);
+      
+      // Cache the data
+      const cacheKey = 'allCommentsCache';
+      const cacheTime = 'allCommentsCacheTime';
+      localStorage.setItem(cacheKey, JSON.stringify(commentsData));
+      localStorage.setItem(cacheTime, Date.now().toString());
     } catch (error) {
       console.error('Error fetching comments:', error);
       setComments([]);
